@@ -64,17 +64,6 @@ we obtain the following Athena `create table` output:
 
 ## Some hints for importing avro files as AWS Athena table
 
-* Nullables: if one field in a record is nullable, all other fields should be nullable. As an example, the following might cause trouble in Athena, because the second field is not nullable:
-```
-{"type":"record", "name":"struct1_name", "fields": [
-          { "name":"sInt", "type": [ "null", "int" ] }, { "name":"sString", "type":"string" } ] }
-```
-The following modification should work:
-```
-{"type":"record", "name":"struct1_name", "fields": [
-          { "name":"sInt", "type": [ "null", "int" ] }, { "name":"sString", "type": [ "null", "string" ] } ] }
-```
-
 * Unions with mutliple primitive types: an example is `["float", "boolean", "string"]`. In general, these kind of data types might cause trouble in Athena. Our schema creator will pick the first element `float` form the union. Consider changing such multiple types to `string`. 
 
 * Infer the schema directly from `.avro` data files: see `util/avro_file_schema_parser.py` for how to do that from a single file.
