@@ -1,5 +1,6 @@
 from avro.schema import parse, RecordSchema, PrimitiveSchema, ArraySchema, MapSchema, EnumSchema, UnionSchema, FixedSchema, \
-    BytesDecimalSchema
+    BytesDecimalSchema, FixedDecimalSchema, DateSchema, TimeMillisSchema, TimeMicrosSchema, TimestampMillisSchema, \
+    TimestampMicrosSchema
 
 def create_athena_schema_from_avro(avro_schema_literal: str) -> str:
     avro_schema: RecordSchema = parse(avro_schema_literal)
@@ -17,7 +18,6 @@ def create_athena_schema_from_avro(avro_schema_literal: str) -> str:
 
 
 def create_athena_column_schema(avro_schema) -> str:
-    print(f'create_column {type(avro_schema)} with type {avro_schema.type}:\n {str(avro_schema)}\n\n')
     if type(avro_schema) == PrimitiveSchema:
         return rename_type_names(avro_schema.type)
 
@@ -26,8 +26,8 @@ def create_athena_column_schema(avro_schema) -> str:
         return f'array<{items_type}>'
 
     elif type(avro_schema) == MapSchema:
-        values_type = avro_schema.values.type
-        return f'map<string,{values_type}>'
+        values_schema = create_athena_column_schema(avro_schema.values)
+        return f'map<string,{values_schema}>'
 
     elif type(avro_schema) == RecordSchema:
         field_schemas = []
@@ -50,8 +50,20 @@ def create_athena_column_schema(avro_schema) -> str:
     elif type(avro_schema) in [EnumSchema, FixedSchema]:
         return 'string'
 
-    elif type(avro_schema) == BytesDecimalSchema:
-        return f'decimal({avro_schema.precision}, {avro_schema.scale})'
+    elif type(avro_schema) in [BytesDecimalSchema, FixedDecimalSchema]:
+        return f'decimal({avro_schema.precision},{avro_schema.scale})'
+
+    elif type(avro_schema) == DateSchema:
+        return 'date'
+
+    elif type(avro_schema) == TimeMillisSchema:
+        return 'int'
+
+    elif type(avro_schema) == TimeMicrosSchema:
+        return 'long'
+
+    elif type(avro_schema) in [TimestampMillisSchema, TimestampMicrosSchema]:
+        return 'timestamp'
 
     else:
         raise Exception(f'unknown avro schema type {avro_schema.type}')
