@@ -40,12 +40,20 @@ def create_athena_column_schema(avro_schema) -> str:
         return f'struct<{field_schema_concatenated}>'
 
     elif type(avro_schema) == UnionSchema:
-        # pick the first schema which is not null
         union_schemas_not_null = [s for s in avro_schema.schemas if s.type != 'null']
-        if len(union_schemas_not_null) > 0:
+        contains_null_schema = len([s for s in avro_schema.schemas if s.type == 'null']) > 0
+        if contains_null_schema and len(union_schemas_not_null) == 1:
             return create_athena_column_schema(union_schemas_not_null[0])
-        else:
+        elif contains_null_schema and len(union_schemas_not_null) == 0:
             raise Exception('union schemas contains only null schema')
+
+        union_schemas = []
+        i = 0
+        for schema in union_schemas_not_null:
+            union_schemas.append(f'member{i}:{create_athena_column_schema(schema)}')
+            i += 1
+        members_concatenated = ','.join(union_schemas)
+        return f'struct<{members_concatenated}>'
 
     elif type(avro_schema) in [EnumSchema, FixedSchema]:
         return 'string'
