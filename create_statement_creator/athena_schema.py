@@ -7,11 +7,8 @@ def create_athena_schema_from_avro(avro_schema_literal: str) -> str:
 
     column_schemas = []
     for field in avro_schema.fields:
-        print(f'processing {field}\n\n')
         column_name = field.name.lower()
-        print(f'column_name {column_name}\n\n')
         column_type = create_athena_column_schema(field.type)
-        print(f'column_type {column_type}\n\n')
         column_schemas.append(f"`{column_name}` {column_type}")
 
     return ', '.join(column_schemas)
