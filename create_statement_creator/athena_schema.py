@@ -30,7 +30,7 @@ def create_athena_column_schema(avro_schema) -> str:
         for field in avro_schema.fields:
             field_name = field.name.lower()
             field_type = create_athena_column_schema(field.type)
-            field_schemas.append(f'{field_name}:{field_type}')
+            field_schemas.append(f"`{field_name}`:{field_type}")
 
         field_schema_concatenated = ','.join(field_schemas)
         return f'struct<{field_schema_concatenated}>'
